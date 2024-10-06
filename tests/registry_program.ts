@@ -7,8 +7,9 @@ import {
   workspace,
   BN,
 } from "@coral-xyz/anchor";
+import fs from "fs";
+import path from "path";
 import { IdRegistry } from "../target/types/id_registry";
-import IDL from "../target/idl/id_registry.json";
 import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
 type PK = web3.PublicKey;
 type KP = web3.Keypair;
@@ -18,11 +19,9 @@ export class IdRegistryProgram {
   static readonly programId: web3.PublicKey = new web3.PublicKey(
     "ECFPDX4ux9wpsrt7KAhGmv3LkXwrgHabLHWUpdKtfBVV"
   );
-  static readonly admin: web3.PublicKey = new web3.PublicKey(
-    "BEs6Lh6NbDVtxt3FPKVkLN9fz22Byk6EvEp4GRUW7mqm"
-  );
   private _program: Program<IdRegistry> | null = null;
   private _wallet: Wallet | null = null;
+  private _admin: KP | null = null;
   private constructor() {}
   static getInstance(): IdRegistryProgram {
     if (!IdRegistryProgram.instance) {
@@ -42,14 +41,22 @@ export class IdRegistryProgram {
     }
     return this._wallet;
   }
+  get admin(): KP {
+    if (!this._program || !this._admin) {
+      this.initializeProgram();
+    }
+    return this._admin;
+  }
   private initializeProgram(): void {
     if (!this._program) {
       let provider = AnchorProvider.env();
       setProvider(provider);
       const program = workspace.IdRegistry as Program<IdRegistry>;
       const wallet = provider.wallet as Wallet;
+      const admin = IdRegistryProgram.getAdminKeypair();
       this._wallet = wallet;
       this._program = program;
+      this._admin = admin;
     }
   }
   static program() {
@@ -77,11 +84,11 @@ export class IdRegistryProgram {
         .program.methods.initializeGateway()
         .accountsStrict({
           idGateway: idGateway,
-          owner: this.admin,
+          owner: IdRegistryProgram.getInstance().admin.publicKey,
           registryGateway: this.registry_gateway_pda,
           systemProgram: SYSTEM_PROGRAM_ID,
         })
-        .signers([this.wallet().payer])
+        .signers([this.wallet().payer, IdRegistryProgram.getInstance().admin])
         .rpcAndKeys({ commitment: "confirmed" });
       console.log(keys.signature);
       return keys.pubkeys;
@@ -106,7 +113,8 @@ export class IdRegistryProgram {
           registryGateway: this.registry_gateway_pda,
           custodyAccount: custody,
           recoveryAccount: recovery,
-          signer: idGatewayKeypair.publicKey,
+          idGateway: idGatewayKeypair.publicKey,
+          payer: this.wallet().publicKey,
           wcidAccount: this.wcid_address(wcid),
         })
         .signers([this.wallet().payer, idGatewayKeypair])
@@ -134,6 +142,13 @@ export class IdRegistryProgram {
       console.log(error.logs);
     }
   }
+  static getAdminKeypair(): KP {
+    const adminJsonPath = path.join(__dirname, "..", "admin.json");
+    const adminJsonContent = fs.readFileSync(adminJsonPath, "utf8");
+    const adminKeypairData = JSON.parse(adminJsonContent);
+    const secretKey = Uint8Array.from(adminKeypairData);
+    return web3.Keypair.fromSecretKey(secretKey);
+  }
   static async createAndAirdropKeypair(
     connection: web3.Connection,
     lamports: number = 1000000000
@@ -145,5 +160,13 @@ export class IdRegistryProgram {
     );
     await connection.confirmTransaction(airdropSignature, "confirmed");
     return keypair;
+  }
+  static async airdrop(
+    connection: web3.Connection,
+    address: PK,
+    lamports: number = 1000000000
+  ) {
+    const airdropSignature = await connection.requestAirdrop(address, lamports);
+    await connection.confirmTransaction(airdropSignature, "confirmed");
   }
 }

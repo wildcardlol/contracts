@@ -8,14 +8,14 @@ use anchor_lang::prelude::*;
 pub fn handler(ctx: Context<Register>) -> Result<()> {
     let Register {
         registry_gateway,
-        signer,
+        id_gateway,
         custody_account,
         recovery_account,
         wcid_account,
         ..
     } = ctx.accounts;
     require!(
-        registry_gateway.id_gateway == signer.key(),
+        registry_gateway.id_gateway == id_gateway.key(),
         IdRegistryError::UnauthorizedGateway
     );
     let wcid = registry_gateway
@@ -38,7 +38,8 @@ pub fn handler(ctx: Context<Register>) -> Result<()> {
 #[derive(Accounts)]
 pub struct Register<'info> {
     #[account(mut)]
-    pub signer: Signer<'info>,
+    pub payer: Signer<'info>,
+    pub id_gateway: Signer<'info>,
     #[account(mut)]
     pub registry_gateway: Account<'info, IdRegistryGateway>,
     /// CHECK: Custody Account
@@ -51,7 +52,7 @@ pub struct Register<'info> {
     pub recovery_account: AccountInfo<'info>,
     #[account(
         init,
-        payer = signer,
+        payer = payer,
         space = 8 + 8 + 32 + 32,
         seeds = [WCID_STATE_SEED, (registry_gateway.id_counter + 1).to_le_bytes().as_ref()],
         bump

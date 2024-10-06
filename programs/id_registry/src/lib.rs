@@ -13,7 +13,7 @@ pub mod constants;
 pub use constants::*;
 pub mod admin {
     use anchor_lang::declare_id;
-    declare_id!("BEs6Lh6NbDVtxt3FPKVkLN9fz22Byk6EvEp4GRUW7mqm");
+    declare_id!("DgSSToixmDerJbnzhZHZyepkpgN3iAtyLaofgP3jmbc6");
 }
 
 #[program]
