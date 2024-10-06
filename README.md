@@ -27,7 +27,12 @@ To reproduce and test the Id registry contract:
   Replace the existing id with your new address.
   This would let you intialize and manage gateway.
 
-4. Run the test
+4. Sync program keys:
+  ```
+  anchor keys sync
+  ```
+
+5. Run the test
   ```
   anchor test --detach
   ```

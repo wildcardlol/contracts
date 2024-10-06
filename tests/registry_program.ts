@@ -16,9 +16,7 @@ type KP = web3.Keypair;
 type con = web3.Connection;
 export class IdRegistryProgram {
   private static instance: IdRegistryProgram;
-  static readonly programId: web3.PublicKey = new web3.PublicKey(
-    "ECFPDX4ux9wpsrt7KAhGmv3LkXwrgHabLHWUpdKtfBVV"
-  );
+  private _programId: web3.PublicKey | null = null;
   private _program: Program<IdRegistry> | null = null;
   private _wallet: Wallet | null = null;
   private _admin: KP | null = null;
@@ -28,6 +26,12 @@ export class IdRegistryProgram {
       IdRegistryProgram.instance = new IdRegistryProgram();
     }
     return IdRegistryProgram.instance;
+  }
+  get programId(): PK {
+    if (!this._program) {
+      this.initializeProgram();
+    }
+    return this._programId!;
   }
   get program(): Program<IdRegistry> {
     if (!this._program) {
@@ -57,6 +61,7 @@ export class IdRegistryProgram {
       this._wallet = wallet;
       this._program = program;
       this._admin = admin;
+      this._programId = program.programId;
     }
   }
   static program() {
@@ -68,14 +73,14 @@ export class IdRegistryProgram {
   static get registry_gateway_pda(): web3.PublicKey {
     return web3.PublicKey.findProgramAddressSync(
       [Buffer.from("registry_gateway")],
-      IdRegistryProgram.programId
+      IdRegistryProgram.getInstance().programId
     )[0];
   }
   static wcid_address(wcid: BN): web3.PublicKey {
     const wcidBuffer = wcid.toArrayLike(Buffer, "le", 8);
     return web3.PublicKey.findProgramAddressSync(
       [Buffer.from("wcid_account_seed"), wcidBuffer],
-      IdRegistryProgram.programId
+      IdRegistryProgram.getInstance().programId
     )[0];
   }
   static async initialize_gateway(idGateway: web3.PublicKey) {
