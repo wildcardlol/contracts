@@ -1,20 +1,20 @@
-use crate::admin;
 use crate::IdRegistryError;
 use crate::IdRegistryGateway;
 use crate::GATEWAY_STATE_SEED;
 use anchor_lang::prelude::*;
+use common::admin;
 
 pub fn handler(ctx: Context<InitializeGateway>) -> Result<()> {
     let InitializeGateway {
         registry_gateway,
         owner,
-        id_gateway,
+        gateway_program,
         ..
     } = ctx.accounts;
-    registry_gateway.gateway_frozen = false;
+    registry_gateway.id_gateway_frozen = false;
     registry_gateway.id_counter = 0;
-    registry_gateway.id_gateway = id_gateway.key();
     registry_gateway.owner = owner.key();
+    registry_gateway.id_gateway_program = gateway_program.key();
     // todo: emit event
     Ok(())
 }
@@ -30,8 +30,10 @@ pub struct InitializeGateway<'info> {
     )]
     pub registry_gateway: Account<'info, IdRegistryGateway>,
     /// CHECK: Gateway account responsible for registring accounts
-    pub id_gateway: AccountInfo<'info>,
-    #[account(mut, constraint = owner.key() == admin::ID @ IdRegistryError::CustomError)]
+    #[account(constraint = gateway_program.executable == true @ IdRegistryError::GatewayIsNotProgram)]
+    pub gateway_program: AccountInfo<'info>,
+    /// Initial Owner is always admin
+    #[account(mut, constraint = owner.key() == admin::ID @ IdRegistryError::UnauthorizedAdmin)]
     pub owner: Signer<'info>,
     pub system_program: Program<'info, System>,
 }

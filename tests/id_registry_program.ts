@@ -76,19 +76,19 @@ export class IdRegistryProgram {
       IdRegistryProgram.getInstance().programId
     )[0];
   }
-  static wcid_address(wcid: BN): web3.PublicKey {
-    const wcidBuffer = wcid.toArrayLike(Buffer, "le", 8);
+  static wid_address(wid: BN): web3.PublicKey {
+    const widBuffer = wid.toArrayLike(Buffer, "le", 8);
     return web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("wcid_account_seed"), wcidBuffer],
+      [Buffer.from("wid_account_seed"), widBuffer],
       IdRegistryProgram.getInstance().programId
     )[0];
   }
-  static async initialize_gateway(idGateway: web3.PublicKey) {
+  static async initialize_gateway(gatewayProgram: web3.PublicKey) {
     try {
       const keys = await IdRegistryProgram.getInstance()
         .program.methods.initializeGateway()
         .accountsStrict({
-          idGateway: idGateway,
+          gatewayProgram,
           owner: IdRegistryProgram.getInstance().admin.publicKey,
           registryGateway: this.registry_gateway_pda,
           systemProgram: SYSTEM_PROGRAM_ID,
@@ -101,28 +101,23 @@ export class IdRegistryProgram {
       console.log(error.logs);
     }
   }
-  static async register(
-    idGatewayKeypair: web3.Keypair,
-    custody: PK,
-    recovery: PK
-  ) {
+  static async register(custody: PK, recovery: PK) {
     try {
       const { idCounter } =
         await this.program().account.idRegistryGateway.fetch(
           this.registry_gateway_pda
         );
-      const wcid = idCounter.add(new BN(1));
+      const wid = idCounter.add(new BN(1));
       const keys = await IdRegistryProgram.getInstance()
         .program.methods.register()
         .accounts({
           registryGateway: this.registry_gateway_pda,
           custodyAccount: custody,
           recoveryAccount: recovery,
-          idGateway: idGatewayKeypair.publicKey,
           payer: this.wallet().publicKey,
-          wcidAccount: this.wcid_address(wcid),
+          widAccount: this.wid_address(wid),
         })
-        .signers([this.wallet().payer, idGatewayKeypair])
+        .signers([this.wallet().payer])
         .rpcAndKeys({ commitment: "confirmed" });
       console.log(keys.signature);
       return keys.pubkeys;
@@ -137,7 +132,7 @@ export class IdRegistryProgram {
         .accounts({
           newCustody,
           signer: custody.publicKey,
-          wcidAccount: wcAddress,
+          widAccount: wcAddress,
         })
         .signers([custody])
         .rpcAndKeys({ commitment: "confirmed" });

@@ -17,7 +17,7 @@ To reproduce and test the Id registry contract:
   ```
   solana-keygen new -o ./admin.json
   ```
-  Copy the generated address and update the admin id in `lib.rs`:
+  Copy the generated address and update the admin id in `common/src/lib.rs`:
   ```rust
   pub mod admin {
       use anchor_lang::declare_id;

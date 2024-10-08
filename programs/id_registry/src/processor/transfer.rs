@@ -1,22 +1,22 @@
 use crate::IdRegistryError;
-use crate::WcidAccount;
+use crate::WidAccount;
 use anchor_lang::prelude::*;
 
 pub fn handler(ctx: Context<Transfer>) -> Result<()> {
     let Transfer {
-        wcid_account,
+        wid_account,
         new_custody,
         signer,
     } = ctx.accounts;
     require!(
-        signer.key() == wcid_account.custody,
+        signer.key() == wid_account.custody,
         IdRegistryError::UnauthorizedCustody
     );
     require!(
-        new_custody.key() != wcid_account.custody,
+        new_custody.key() != wid_account.custody,
         IdRegistryError::CannotTransferToSameCustody
     );
-    wcid_account.custody = new_custody.key();
+    wid_account.custody = new_custody.key();
     // todo: emit event
     Ok(())
 }
@@ -25,7 +25,7 @@ pub fn handler(ctx: Context<Transfer>) -> Result<()> {
 pub struct Transfer<'info> {
     pub signer: Signer<'info>,
     #[account(mut)]
-    pub wcid_account: Account<'info, WcidAccount>,
+    pub wid_account: Account<'info, WidAccount>,
     /// CHECK: New Custody Account
     pub new_custody: AccountInfo<'info>,
 }

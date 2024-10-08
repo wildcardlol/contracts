@@ -25,4 +25,12 @@ pub enum IdRegistryError {
     UnauthorizedRecoveryAccount,
     #[msg("Cannot recover to same custody")]
     CannotRecoverToSameCustody,
+    #[msg("Unauthorized CPI call")]
+    UnauthorizedCpiCall,
+    #[msg("Unauthorized gateway program Id")]
+    GatewayIsNotProgram,
+    #[msg("Unauthorized program Id")]
+    KeyRegistryIsNotProgram,
+    #[msg("Key Registry is frozen")]
+    KeyRegistryFrozen,
 }

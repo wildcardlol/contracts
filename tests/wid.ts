@@ -1,8 +1,8 @@
 import { web3, BN } from "@coral-xyz/anchor";
 import { assert } from "chai";
-import { IdRegistryProgram } from "./registry_program";
+import { IdRegistryProgram } from "./id_registry_program";
 
-describe("WCID (Wild Card ID) Registry", () => {
+describe("WID (Wild Card ID) Registry", () => {
   let connection: web3.Connection;
   let idGateway: web3.Keypair;
   let custody: web3.Keypair;
@@ -34,7 +34,7 @@ describe("WCID (Wild Card ID) Registry", () => {
       );
 
     assertWithLog(
-      gatewayData.gatewayFrozen === false,
+      gatewayData.idGatewayFrozen === false,
       "Gateway should not be frozen initially"
     );
     assertWithLog(
@@ -42,7 +42,8 @@ describe("WCID (Wild Card ID) Registry", () => {
       "ID counter should start at 0"
     );
     assertWithLog(
-      gatewayData.idGateway.toBase58() === idGateway.publicKey.toBase58(),
+      gatewayData.idGatewayProgram.toBase58() ===
+        idGateway.publicKey.toBase58(),
       "ID Gateway should match the provided public key"
     );
     assertWithLog(
@@ -55,12 +56,8 @@ describe("WCID (Wild Card ID) Registry", () => {
   });
 
   it("should register a new WID correctly", async () => {
-    console.log("Registering new WCID...");
-    await IdRegistryProgram.register(
-      idGateway,
-      custody.publicKey,
-      recovery.publicKey
-    );
+    console.log("Registering new WID...");
+    await IdRegistryProgram.register(custody.publicKey, recovery.publicKey);
 
     const gatewayData =
       await IdRegistryProgram.program().account.idRegistryGateway.fetch(
@@ -71,47 +68,44 @@ describe("WCID (Wild Card ID) Registry", () => {
       "ID counter should increment to 1"
     );
 
-    const wcidData =
-      await IdRegistryProgram.program().account.wcidAccount.fetch(
-        IdRegistryProgram.wcid_address(gatewayData.idCounter)
-      );
+    const widData = await IdRegistryProgram.program().account.widAccount.fetch(
+      IdRegistryProgram.wid_address(gatewayData.idCounter)
+    );
 
-    assertWithLog(wcidData.wcid.toString() === "1", "WCID should be set to 1");
+    assertWithLog(widData.wid.toString() === "1", "WID should be set to 1");
     assertWithLog(
-      wcidData.custody.toBase58() === custody.publicKey.toBase58(),
+      widData.custody.toBase58() === custody.publicKey.toBase58(),
       "Custody public key should match the registered one"
     );
     assertWithLog(
-      wcidData.recovery.toBase58() === recovery.publicKey.toBase58(),
+      widData.recovery.toBase58() === recovery.publicKey.toBase58(),
       "Recovery public key should match the registered one"
     );
 
     printAccountData("ID Registry Gateway", gatewayData);
-    printAccountData("WCID Account", wcidData);
-    console.log(
-      "WID registered successfully with ID:",
-      wcidData.wcid.toString()
-    );
+    printAccountData("WID Account", widData);
+    console.log("WID registered successfully with ID:", widData.wid.toString());
   });
 
   it("should transfer custody correctly", async () => {
     console.log("Transferring custody...");
-    const wcAddress = IdRegistryProgram.wcid_address(new BN(1));
+    const wcAddress = IdRegistryProgram.wid_address(new BN(1));
     await IdRegistryProgram.transfer(wcAddress, custody, custody1.publicKey);
 
-    const wcidData =
-      await IdRegistryProgram.program().account.wcidAccount.fetch(wcAddress);
+    const widData = await IdRegistryProgram.program().account.widAccount.fetch(
+      wcAddress
+    );
 
     assertWithLog(
-      wcidData.custody.toBase58() !== custody.publicKey.toBase58(),
+      widData.custody.toBase58() !== custody.publicKey.toBase58(),
       "Custody should have changed from the original"
     );
     assertWithLog(
-      wcidData.custody.toBase58() === custody1.publicKey.toBase58(),
+      widData.custody.toBase58() === custody1.publicKey.toBase58(),
       "New custody should match the transferred account"
     );
 
-    printAccountData("Updated WCID Account", wcidData);
+    printAccountData("Updated WID Account", widData);
     console.log(
       "Custody transferred successfully to:",
       custody1.publicKey.toBase58()
