@@ -632,6 +632,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 
 [[package]]
+name = "common"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+]
+
+[[package]]
 name = "console_error_panic_hook"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -872,10 +879,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "id_gateway"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "id_registry",
+]
+
+[[package]]
 name = "id_registry"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "common",
 ]
 
 [[package]]
@@ -1490,6 +1506,24 @@ name = "shlex"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
+
+[[package]]
+name = "signer_gateway"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "id_registry",
+ "signer_registry",
+]
+
+[[package]]
+name = "signer_registry"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "common",
+ "id_registry",
+]
 
 [[package]]
 name = "sized-chunks"

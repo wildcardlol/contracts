@@ -14,3 +14,5 @@ pub mod change_recovery;
 pub use change_recovery::*;
 pub mod recover;
 pub use recover::*;
+pub mod key_counter;
+pub use key_counter::*;

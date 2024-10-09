@@ -1,12 +1,12 @@
 [package]
-name = "id_registry"
+name = "common"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "id_registry"
+name = "common"
 
 [features]
 default = []
@@ -17,5 +17,4 @@ no-log-ix-name = []
 idl-build = ["anchor-lang/idl-build"]
 
 [dependencies]
-anchor-lang = { workspace = true }
-common = { path = "../../common" }
+anchor-lang = "0.30.1"

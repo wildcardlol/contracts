@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("95wVTaZEyDkvUZ8VryNMaMLUGnJRTWPyw2Vmk5jFdAgW");
+declare_id!("CGjicJKZE9tYBxMup4nhmrzfbonb6uNcYUFx5KV8U7n5");
 pub mod error;
 pub use error::*;
 pub mod state;
@@ -11,11 +11,6 @@ pub mod processor;
 pub use processor::*;
 pub mod constants;
 pub use constants::*;
-pub mod admin {
-    use anchor_lang::declare_id;
-    declare_id!("DgSSToixmDerJbnzhZHZyepkpgN3iAtyLaofgP3jmbc6");
-}
-
 #[program]
 pub mod id_registry {
     use super::*;
@@ -29,6 +24,7 @@ pub mod id_registry {
         processor::set_gateway::handler(ctx)?;
         Ok(())
     }
+    // Once frozen cannot be set again
     pub fn freeze_gateway(ctx: Context<FreezeGateway>) -> Result<()> {
         processor::freeze_gateway::handler(ctx)?;
         Ok(())
@@ -37,6 +33,12 @@ pub mod id_registry {
     /// GATEWAY MANAGED
     pub fn register(ctx: Context<Register>) -> Result<()> {
         processor::register::handler(ctx)?;
+        Ok(())
+    }
+
+    /// CALLED BY KEY REGISTRY -> KEY GATEWAY MANAGED
+    pub fn increase_wid_key_counter(ctx: Context<IncreaseWidKeyCounter>) -> Result<()> {
+        processor::key_counter::handler(ctx)?;
         Ok(())
     }
 
