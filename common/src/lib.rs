@@ -8,7 +8,7 @@ pub mod admin {
 pub struct KeyRegistryGateway {
     pub id_registry_program: Pubkey,
     pub key_gateway_program: Pubkey,
-    pub gateway_frozen: bool,
+    pub key_gateway_frozen: bool,
     pub max_keys_per_id: u16,
     pub owner: Pubkey,
 }

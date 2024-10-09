@@ -4,7 +4,7 @@ use crate::KEY_GATEWAY_SEED;
 use anchor_lang::prelude::*;
 use common::admin;
 
-pub fn handler(ctx: Context<InitializeGateway>, max_keys_per_id: u16) -> Result<()> {
+pub fn handler(ctx: Context<InitializeGateway>, max_keys_per_id: u16, max_flags: u8) -> Result<()> {
     let InitializeGateway {
         key_gateway_state,
         key_gateway_program,
@@ -16,6 +16,7 @@ pub fn handler(ctx: Context<InitializeGateway>, max_keys_per_id: u16) -> Result<
     key_gateway_state.id_registry_program = id_registry_program.key();
     key_gateway_state.key_gateway_program = key_gateway_program.key();
     key_gateway_state.max_keys_per_id = max_keys_per_id;
+    key_gateway_state.max_flags = max_flags;
     key_gateway_state.owner = owner.key();
     // todo: emit event
     Ok(())

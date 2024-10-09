@@ -17,6 +17,8 @@ pub enum IdRegistryError {
     UnauthorizedCustody,
     #[msg("Total Number of Id exceeded")]
     OverflowError,
+    #[msg("Total Number of Key exceeded")]
+    KeyOverflowError,
     #[msg("Cannot set the same recovery address")]
     CannotSetSameRecovery,
     #[msg("Cannot transfer to same custody")]

@@ -28,7 +28,7 @@ pub struct IncreaseWidKeyCounter<'info> {
 impl<'info> IncreaseWidKeyCounter<'info> {
     fn enforce_call_from_key_gateway(&self) -> Result<()> {
         let ix = anchor_lang::solana_program::sysvar::instructions::get_instruction_relative(
-            -1,
+            0,
             &self.instruction_sysvar,
         )?;
         let data = self.key_gateway_state.try_borrow_data()?;
@@ -38,7 +38,7 @@ impl<'info> IncreaseWidKeyCounter<'info> {
         // Enforces CPI
         require!(
             ix.program_id == key_gateway_state.key_gateway_program.key(),
-            IdRegistryError::UnauthorizedCpiCall
+            IdRegistryError::UnauthorizedGateway
         );
         Ok(())
     }

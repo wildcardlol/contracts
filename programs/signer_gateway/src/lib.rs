@@ -17,7 +17,7 @@ pub mod signer_gateway {
             wid_account,
             key_account,
             key_gateway_state,
-            registry_program,
+            id_registry_program,
             key_registry_program,
             system_program,
             instruction_sysvar,
@@ -31,7 +31,7 @@ pub mod signer_gateway {
                     key_account: key_account.to_account_info(),
                     key_gateway_state: key_gateway_state.to_account_info(),
                     payer: payer.to_account_info(),
-                    registry_program: registry_program.to_account_info(),
+                    id_registry_program: id_registry_program.to_account_info(),
                     system_program: system_program.to_account_info(),
                     wid_account: wid_account.to_account_info(),
                 },
@@ -49,12 +49,14 @@ pub struct Add<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     pub custody: Signer<'info>,
+    /// Key counter will be incremented
     #[account(mut)]
     pub wid_account: Account<'info, WidAccount>,
-    /// Pda: Will be created in Key Registry Program
-    pub key_account: Account<'info, KeyAccount>,
+    /// CHECK: Will be created in Key Registry Program
+    #[account(mut)]
+    pub key_account: UncheckedAccount<'info>,
     pub key_gateway_state: Account<'info, KeyRegistryGateway>,
-    pub registry_program: Program<'info, IdRegistry>,
+    pub id_registry_program: Program<'info, IdRegistry>,
     pub key_registry_program: Program<'info, SignerRegistry>,
     pub system_program: Program<'info, System>,
     /// CHECK: Sysvar: Used to enforce cpi

@@ -1,6 +1,7 @@
-import { web3 } from "@coral-xyz/anchor";
+import { BN, web3 } from "@coral-xyz/anchor";
 import path from "path";
 import fs from "fs";
+import { IdRegistryProgram } from "./id_registry_program";
 export type KP = web3.Keypair;
 export type PK = web3.PublicKey;
 export class Common {
@@ -31,4 +32,17 @@ export class Common {
     const airdropSignature = await connection.requestAirdrop(address, lamports);
     await connection.confirmTransaction(airdropSignature, "confirmed");
   }
+  static get admin() {
+    return IdRegistryProgram.getInstance().admin;
+  }
+  static get wallet() {
+    return IdRegistryProgram.getInstance().wallet;
+  }
+}
+
+export interface WidAccount {
+  wid: BN;
+  custody: web3.PublicKey;
+  recovery: web3.PublicKey;
+  keyCounter: number;
 }

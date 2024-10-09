@@ -17,7 +17,7 @@ pub fn handler(ctx: Context<Register>) -> Result<()> {
     let wid = registry_gateway
         .id_counter
         .checked_add(1)
-        .ok_or(IdRegistryError::OverflowError)?;
+        .ok_or(IdRegistryError::KeyOverflowError)?;
 
     registry_gateway.id_counter = wid;
     wid_account.wid = wid;

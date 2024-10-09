@@ -2,32 +2,27 @@ import {
   AnchorProvider,
   Program,
   setProvider,
-  web3,
   Wallet,
+  web3,
   workspace,
-  BN,
 } from "@coral-xyz/anchor";
-import fs from "fs";
-import path from "path";
-import { IdGateway } from "../target/types/id_gateway";
 import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
+import { SignerGateway } from "../target/types/signer_gateway";
+import { Common, KP, PK, WidAccount } from "./common";
 import { IdRegistryProgram } from "./id_registry_program";
-import { Common } from "./common";
-type PK = web3.PublicKey;
-type KP = web3.Keypair;
-type con = web3.Connection;
-export class IdGatewayProgram {
-  private static instance: IdGatewayProgram;
+import { SignerRegistryProgram } from "./signer_registry";
+export class SignerGatewayProgram {
+  private static instance: SignerGatewayProgram;
   private _programId: web3.PublicKey | null = null;
-  private _program: Program<IdGateway> | null = null;
+  private _program: Program<SignerGateway> | null = null;
   private _wallet: Wallet | null = null;
   private _admin: KP | null = null;
   private constructor() {}
-  static getInstance(): IdGatewayProgram {
-    if (!IdGatewayProgram.instance) {
-      IdGatewayProgram.instance = new IdGatewayProgram();
+  static getInstance(): SignerGatewayProgram {
+    if (!SignerGatewayProgram.instance) {
+      SignerGatewayProgram.instance = new SignerGatewayProgram();
     }
-    return IdGatewayProgram.instance;
+    return SignerGatewayProgram.instance;
   }
   get programId(): PK {
     if (!this._program) {
@@ -35,7 +30,7 @@ export class IdGatewayProgram {
     }
     return this._programId!;
   }
-  get program(): Program<IdGateway> {
+  get program(): Program<SignerGateway> {
     if (!this._program) {
       this.initializeProgram();
     }
@@ -57,7 +52,7 @@ export class IdGatewayProgram {
     if (!this._program) {
       let provider = AnchorProvider.env();
       setProvider(provider);
-      const program = workspace.IdGateway as Program<IdGateway>;
+      const program = workspace.SignerGateway as Program<SignerGateway>;
       const wallet = provider.wallet as Wallet;
       const admin = Common.getAdminKeypair();
       this._wallet = wallet;
@@ -66,39 +61,35 @@ export class IdGatewayProgram {
       this._programId = program.programId;
     }
   }
-  static async registerViaGateway(
-    custodyAddress: PK,
-    recoveryAddress: PK,
-    registryProgram: PK
+  static async addSignerViaGateway(
+    custody: KP,
+    widAccount: WidAccount,
+    keyType: number,
+    keyValue: Buffer,
+    flags: Array<boolean>,
+    isAdmin: boolean
   ) {
     try {
-      const { idCounter } =
-        await this.getInstance().program.account.idRegistryGateway.fetch(
-          IdRegistryProgram.registryGatewayPda
-        );
-      const wid = idCounter.add(new BN(1));
-      const instance = IdGatewayProgram.getInstance();
+      const instance = this.getInstance();
       const keys = await instance.program.methods
-        .register()
+        .add({ keyType, value: keyValue }, flags, isAdmin)
         .accountsStrict({
-          custodyAccount: custodyAddress,
+          idRegistryProgram: IdRegistryProgram.getInstance().programId,
+          keyGatewayState: SignerRegistryProgram.keyGatewayPda,
+          keyRegistryProgram: SignerRegistryProgram.getInstance().programId,
+          custody: custody.publicKey,
           payer: instance.wallet.publicKey,
-          recoveryAccount: recoveryAddress,
-          registryProgram,
-          widAccount: IdRegistryProgram.widAddress(wid),
+          keyAccount: SignerRegistryProgram.keyAccountAddress(widAccount),
+          widAccount: IdRegistryProgram.widAddress(widAccount.wid),
           instructionSysvar: web3.SYSVAR_INSTRUCTIONS_PUBKEY,
-          registryGateway: IdRegistryProgram.registryGatewayPda,
           systemProgram: SYSTEM_PROGRAM_ID,
         })
-        .signers([instance.wallet.payer])
+        .signers([instance.wallet.payer, custody])
         .rpcAndKeys({ commitment: "confirmed" });
       console.log(keys.signature);
       return true;
     } catch (error) {
-      if (!error.errorLogs) {
-        throw new Error("Unexpected error");
-      }
-      console.log(error.errorLogs);
+      console.log(error);
       return false;
     }
   }

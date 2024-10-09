@@ -11,12 +11,14 @@ import { Common, KP, PK } from "./common";
 import { IdRegistry } from "../target/types/id_registry";
 import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
 import { IdGatewayProgram } from "./id_gateway_program";
-export class IdRegistryProgram extends Common {
+export class IdRegistryProgram {
   private static instance: IdRegistryProgram;
   private _programId: web3.PublicKey | null = null;
   private _program: Program<IdRegistry> | null = null;
   private _wallet: Wallet | null = null;
   private _admin: KP | null = null;
+  private constructor() {}
+
   static getInstance(): IdRegistryProgram {
     if (!IdRegistryProgram.instance) {
       IdRegistryProgram.instance = new IdRegistryProgram();
@@ -53,48 +55,47 @@ export class IdRegistryProgram extends Common {
       setProvider(provider);
       const program = workspace.IdRegistry as Program<IdRegistry>;
       const wallet = provider.wallet as Wallet;
-      const admin = IdRegistryProgram.getAdminKeypair();
+      const admin = Common.getAdminKeypair();
       this._wallet = wallet;
       this._program = program;
       this._admin = admin;
       this._programId = program.programId;
     }
   }
-  static program() {
-    return IdRegistryProgram.getInstance().program;
-  }
-  static wallet() {
-    return IdRegistryProgram.getInstance().wallet;
-  }
-  static get registry_gateway_pda(): web3.PublicKey {
+  static get registryGatewayPda(): web3.PublicKey {
     return web3.PublicKey.findProgramAddressSync(
       [Buffer.from("registry_gateway")],
-      IdRegistryProgram.getInstance().programId
+      this.getInstance().programId
     )[0];
   }
-  static wid_address(wid: BN): web3.PublicKey {
+  static async fetchIdRegistryGatewayAccount() {
+    return await this.getInstance().program.account.idRegistryGateway.fetch(
+      this.registryGatewayPda
+    );
+  }
+  static widAddress(wid: BN): web3.PublicKey {
     const widBuffer = wid.toArrayLike(Buffer, "le", 8);
     return web3.PublicKey.findProgramAddressSync(
       [Buffer.from("wid_account_seed"), widBuffer],
-      IdRegistryProgram.getInstance().programId
+      this.getInstance().programId
     )[0];
   }
-  static async initialize_gateway(): Promise<boolean> {
+  static async initializeGateway(idGatewayProgram: PK): Promise<boolean> {
     try {
-      const keys = await IdRegistryProgram.getInstance()
+      const keys = await this.getInstance()
         .program.methods.initializeGateway()
         .accountsStrict({
-          gatewayProgram: IdGatewayProgram.getInstance().programId,
-          owner: IdRegistryProgram.getInstance().admin.publicKey,
-          registryGateway: this.registry_gateway_pda,
+          gatewayProgram: idGatewayProgram,
+          owner: Common.admin.publicKey,
+          registryGateway: this.registryGatewayPda,
           systemProgram: SYSTEM_PROGRAM_ID,
         })
-        .signers([this.wallet().payer, IdRegistryProgram.getInstance().admin])
+        .signers([Common.wallet.payer, Common.admin])
         .rpcAndKeys({ commitment: "confirmed" });
       console.log(keys.signature);
       return true;
     } catch (error) {
-      console.log(error.logs);
+      console.log(error.errorLogs);
       return false;
     }
   }
@@ -103,45 +104,51 @@ export class IdRegistryProgram extends Common {
   static async registerRaw(custody: PK, recovery: PK): Promise<boolean> {
     try {
       const { idCounter } =
-        await this.program().account.idRegistryGateway.fetch(
-          this.registry_gateway_pda
+        await this.getInstance().program.account.idRegistryGateway.fetch(
+          this.registryGatewayPda
         );
       const wid = idCounter.add(new BN(1));
-      const keys = await IdRegistryProgram.getInstance()
+      const keys = await this.getInstance()
         .program.methods.register()
         .accountsStrict({
-          registryGateway: this.registry_gateway_pda,
+          registryGateway: this.registryGatewayPda,
           custodyAccount: custody,
           recoveryAccount: recovery,
-          payer: this.wallet().publicKey,
-          widAccount: this.wid_address(wid),
+          payer: Common.wallet.publicKey,
+          widAccount: this.widAddress(wid),
           instructionSysvar: web3.SYSVAR_INSTRUCTIONS_PUBKEY,
           systemProgram: web3.SystemProgram.programId,
         })
-        .signers([this.wallet().payer])
+        .signers([Common.wallet.payer])
         .rpcAndKeys({ commitment: "confirmed" });
       console.log(keys.signature);
       return true;
     } catch (error) {
-      console.log(error.logs);
+      console.log(error.errorLogs);
       return false;
     }
   }
-  static async transfer(wcAddress: PK, custody: KP, newCustody: PK) {
+  static async transfer(widAddress: PK, custody: KP, newCustody: PK) {
     try {
-      const keys = await IdRegistryProgram.getInstance()
+      const keys = await this.getInstance()
         .program.methods.transfer()
         .accounts({
           newCustody,
           signer: custody.publicKey,
-          widAccount: wcAddress,
+          widAccount: widAddress,
         })
         .signers([custody])
         .rpcAndKeys({ commitment: "confirmed" });
       console.log(keys.signature);
-      return keys.pubkeys;
+      return true;
     } catch (error) {
-      console.log(error.logs);
+      console.log(error.errorLogs);
+      return false;
     }
+  }
+  static async fetchWidAccount(wid: BN) {
+    return await this.getInstance().program.account.widAccount.fetch(
+      this.widAddress(wid)
+    );
   }
 }

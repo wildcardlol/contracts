@@ -13,8 +13,14 @@ pub enum KeyRegistryError {
     UnauthorizedGateway,
     #[msg("Invalid Custody")]
     UnauthorizedCustody,
-    #[msg("Total Number of Id exceeded")]
+    #[msg("Total Number of Key exceeded")]
     OverflowError,
+    #[msg("Total limit exceeded")]
+    LimitExceeded,
+    #[msg("Number of flags Exceeded")]
+    FlagsLengthExceeded,
+    #[msg("Key cannot be greater than 256 bytes")]
+    KeyValueLengthExceeded,
     #[msg("Unauthorized gateway program Id")]
     GatewayIsNotProgram,
 }

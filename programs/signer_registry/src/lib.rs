@@ -17,8 +17,12 @@ pub mod signer_registry {
     use super::*;
 
     /// ADMIN MANAGED
-    pub fn initialize_gateway(ctx: Context<InitializeGateway>, max_keys_per_id: u16) -> Result<()> {
-        processor::initialize_gateway::handler(ctx, max_keys_per_id)?;
+    pub fn initialize_gateway(
+        ctx: Context<InitializeGateway>,
+        max_keys_per_id: u16,
+        max_flags: u8,
+    ) -> Result<()> {
+        processor::initialize_gateway::handler(ctx, max_keys_per_id, max_flags)?;
         Ok(())
     }
     pub fn set_gateway(ctx: Context<SetGateway>) -> Result<()> {
