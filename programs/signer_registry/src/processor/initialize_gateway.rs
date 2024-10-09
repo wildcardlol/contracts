@@ -12,7 +12,7 @@ pub fn handler(ctx: Context<InitializeGateway>, max_keys_per_id: u16) -> Result<
         owner,
         ..
     } = ctx.accounts;
-    key_gateway_state.gateway_frozen = false;
+    key_gateway_state.key_gateway_frozen = false;
     key_gateway_state.id_registry_program = id_registry_program.key();
     key_gateway_state.key_gateway_program = key_gateway_program.key();
     key_gateway_state.max_keys_per_id = max_keys_per_id;

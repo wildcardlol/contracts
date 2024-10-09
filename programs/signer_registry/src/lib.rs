@@ -31,7 +31,7 @@ pub mod signer_registry {
     }
 
     /// GATEWAY MANAGED AND CUSTODY
-    pub fn add(ctx: Context<Add>, key: KeyData, flags: Vec<u8>, is_admin: bool) -> Result<()> {
+    pub fn add(ctx: Context<Add>, key: KeyData, flags: Vec<bool>, is_admin: bool) -> Result<()> {
         processor::add::handler(ctx, key, flags, is_admin)?;
         Ok(())
     }

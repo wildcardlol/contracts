@@ -24,7 +24,7 @@ pub struct InitializeGateway<'info> {
     #[account(
         init,
         payer = owner,
-        space = 8 + 32 + 1 + 8 + 32,
+        space = 8 + IdRegistryGateway::INIT_SPACE,
         seeds = [GATEWAY_STATE_SEED],
         bump
     )]

@@ -5,7 +5,7 @@ use id_registry::{
     program::IdRegistry,
     WidAccount,
 };
-pub fn handler(ctx: Context<Add>, key: KeyData, flags: Vec<u8>, is_admin: bool) -> Result<()> {
+pub fn handler(ctx: Context<Add>, key: KeyData, flags: Vec<bool>, is_admin: bool) -> Result<()> {
     ctx.accounts.enforce_key_gateway()?;
     let Add {
         wid_account,

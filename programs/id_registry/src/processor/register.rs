@@ -49,7 +49,7 @@ pub struct Register<'info> {
     #[account(
         init,
         payer = payer,
-        space = 8 + 8 + 32 + 32,
+        space = 8 + WidAccount::INIT_SPACE,
         seeds = [WID_STATE_SEED, (registry_gateway.id_counter + 1).to_le_bytes().as_ref()],
         bump
     )]

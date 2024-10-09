@@ -7,20 +7,16 @@ import {
   workspace,
   BN,
 } from "@coral-xyz/anchor";
-import fs from "fs";
-import path from "path";
+import { Common, KP, PK } from "./common";
 import { IdRegistry } from "../target/types/id_registry";
 import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
-type PK = web3.PublicKey;
-type KP = web3.Keypair;
-type con = web3.Connection;
-export class IdRegistryProgram {
+import { IdGatewayProgram } from "./id_gateway_program";
+export class IdRegistryProgram extends Common {
   private static instance: IdRegistryProgram;
   private _programId: web3.PublicKey | null = null;
   private _program: Program<IdRegistry> | null = null;
   private _wallet: Wallet | null = null;
   private _admin: KP | null = null;
-  private constructor() {}
   static getInstance(): IdRegistryProgram {
     if (!IdRegistryProgram.instance) {
       IdRegistryProgram.instance = new IdRegistryProgram();
@@ -83,12 +79,12 @@ export class IdRegistryProgram {
       IdRegistryProgram.getInstance().programId
     )[0];
   }
-  static async initialize_gateway(gatewayProgram: web3.PublicKey) {
+  static async initialize_gateway(): Promise<boolean> {
     try {
       const keys = await IdRegistryProgram.getInstance()
         .program.methods.initializeGateway()
         .accountsStrict({
-          gatewayProgram,
+          gatewayProgram: IdGatewayProgram.getInstance().programId,
           owner: IdRegistryProgram.getInstance().admin.publicKey,
           registryGateway: this.registry_gateway_pda,
           systemProgram: SYSTEM_PROGRAM_ID,
@@ -96,12 +92,15 @@ export class IdRegistryProgram {
         .signers([this.wallet().payer, IdRegistryProgram.getInstance().admin])
         .rpcAndKeys({ commitment: "confirmed" });
       console.log(keys.signature);
-      return keys.pubkeys;
+      return true;
     } catch (error) {
       console.log(error.logs);
+      return false;
     }
   }
-  static async register(custody: PK, recovery: PK) {
+
+  // This should fail everytime invoked, only gateway should be able to cpi to this
+  static async registerRaw(custody: PK, recovery: PK): Promise<boolean> {
     try {
       const { idCounter } =
         await this.program().account.idRegistryGateway.fetch(
@@ -110,19 +109,22 @@ export class IdRegistryProgram {
       const wid = idCounter.add(new BN(1));
       const keys = await IdRegistryProgram.getInstance()
         .program.methods.register()
-        .accounts({
+        .accountsStrict({
           registryGateway: this.registry_gateway_pda,
           custodyAccount: custody,
           recoveryAccount: recovery,
           payer: this.wallet().publicKey,
           widAccount: this.wid_address(wid),
+          instructionSysvar: web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+          systemProgram: web3.SystemProgram.programId,
         })
         .signers([this.wallet().payer])
         .rpcAndKeys({ commitment: "confirmed" });
       console.log(keys.signature);
-      return keys.pubkeys;
+      return true;
     } catch (error) {
       console.log(error.logs);
+      return false;
     }
   }
   static async transfer(wcAddress: PK, custody: KP, newCustody: PK) {
@@ -141,32 +143,5 @@ export class IdRegistryProgram {
     } catch (error) {
       console.log(error.logs);
     }
-  }
-  static getAdminKeypair(): KP {
-    const adminJsonPath = path.join(__dirname, "..", "admin.json");
-    const adminJsonContent = fs.readFileSync(adminJsonPath, "utf8");
-    const adminKeypairData = JSON.parse(adminJsonContent);
-    const secretKey = Uint8Array.from(adminKeypairData);
-    return web3.Keypair.fromSecretKey(secretKey);
-  }
-  static async createAndAirdropKeypair(
-    connection: web3.Connection,
-    lamports: number = 1000000000
-  ): Promise<web3.Keypair> {
-    const keypair = new web3.Keypair();
-    const airdropSignature = await connection.requestAirdrop(
-      keypair.publicKey,
-      lamports
-    );
-    await connection.confirmTransaction(airdropSignature, "confirmed");
-    return keypair;
-  }
-  static async airdrop(
-    connection: web3.Connection,
-    address: PK,
-    lamports: number = 1000000000
-  ) {
-    const airdropSignature = await connection.requestAirdrop(address, lamports);
-    await connection.confirmTransaction(airdropSignature, "confirmed");
   }
 }

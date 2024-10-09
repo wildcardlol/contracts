@@ -48,7 +48,8 @@ pub struct Register<'info> {
     /// CHECK: Sysvar: used to enforce cpi
     #[account(address = anchor_lang::solana_program::sysvar::instructions::id())]
     pub instruction_sysvar: UncheckedAccount<'info>,
-    /// Will be created in Id registry program
-    pub wid_account: Account<'info, WidAccount>,
+    /// CHECK: Will be created in Id registry program
+    #[account(mut)]
+    pub wid_account: UncheckedAccount<'info>,
     pub registry_program: Program<'info, IdRegistry>,
 }

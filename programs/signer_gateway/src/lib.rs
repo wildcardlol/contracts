@@ -10,7 +10,7 @@ pub mod signer_gateway {
 
     use super::*;
 
-    pub fn add(ctx: Context<Add>, key: KeyData, flags: Vec<u8>, is_admin: bool) -> Result<()> {
+    pub fn add(ctx: Context<Add>, key: KeyData, flags: Vec<bool>, is_admin: bool) -> Result<()> {
         let Add {
             payer,
             custody,

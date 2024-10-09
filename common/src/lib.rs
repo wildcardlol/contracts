@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 pub mod admin {
     use anchor_lang::declare_id;
-    declare_id!("FYYbupvWvzjXSjC9PA178CytPXMUqGWvbL98Jx9HEzR5");
+    declare_id!("FoNyjst61BmFbGMAh8L9eGuQfkfCWZpUqCvNFkvXdcGL");
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]

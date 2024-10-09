@@ -14,10 +14,10 @@ pub fn handler(ctx: Context<FreezeGateway>) -> Result<()> {
         KeyRegistryError::UnauthorizedOwner
     );
     require!(
-        key_gateway_state.gateway_frozen == false,
+        key_gateway_state.key_gateway_frozen == false,
         KeyRegistryError::GatewayFrozen
     );
-    key_gateway_state.gateway_frozen = true;
+    key_gateway_state.key_gateway_frozen = true;
     // todo: emit event
     Ok(())
 }

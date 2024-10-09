@@ -15,7 +15,7 @@ pub fn handler(ctx: Context<SetGateway>) -> Result<()> {
         KeyRegistryError::UnauthorizedOwner
     );
     require!(
-        key_gateway_state.gateway_frozen == false,
+        key_gateway_state.key_gateway_frozen == false,
         KeyRegistryError::GatewayFrozen
     );
     key_gateway_state.key_gateway_program = new_key_gateway_program.key();

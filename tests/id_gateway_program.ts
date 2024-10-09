@@ -9,15 +9,17 @@ import {
 } from "@coral-xyz/anchor";
 import fs from "fs";
 import path from "path";
-import { IdRegistry } from "../target/types/id_registry";
+import { IdGateway } from "../target/types/id_gateway";
 import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
+import { IdRegistryProgram } from "./id_registry_program";
+import { Common } from "./common";
 type PK = web3.PublicKey;
 type KP = web3.Keypair;
 type con = web3.Connection;
 export class IdGatewayProgram {
   private static instance: IdGatewayProgram;
   private _programId: web3.PublicKey | null = null;
-  private _program: Program<IdRegistry> | null = null;
+  private _program: Program<IdGateway> | null = null;
   private _wallet: Wallet | null = null;
   private _admin: KP | null = null;
   private constructor() {}
@@ -33,7 +35,7 @@ export class IdGatewayProgram {
     }
     return this._programId!;
   }
-  get program(): Program<IdRegistry> {
+  get program(): Program<IdGateway> {
     if (!this._program) {
       this.initializeProgram();
     }
@@ -55,9 +57,9 @@ export class IdGatewayProgram {
     if (!this._program) {
       let provider = AnchorProvider.env();
       setProvider(provider);
-      const program = workspace.IdRegistry as Program<IdRegistry>;
+      const program = workspace.IdGateway as Program<IdGateway>;
       const wallet = provider.wallet as Wallet;
-      const admin = IdGatewayProgram.getAdminKeypair();
+      const admin = Common.getAdminKeypair();
       this._wallet = wallet;
       this._program = program;
       this._admin = admin;
@@ -70,103 +72,40 @@ export class IdGatewayProgram {
   static wallet() {
     return IdGatewayProgram.getInstance().wallet;
   }
-  static get registry_gateway_pda(): web3.PublicKey {
-    return web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("registry_gateway")],
-      IdGatewayProgram.getInstance().programId
-    )[0];
-  }
-  static wid_address(wid: BN): web3.PublicKey {
-    const widBuffer = wid.toArrayLike(Buffer, "le", 8);
-    return web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("wid_account_seed"), widBuffer],
-      IdGatewayProgram.getInstance().programId
-    )[0];
-  }
-  static async initialize_gateway(gatewayProgram: web3.PublicKey) {
-    try {
-      const keys = await IdGatewayProgram.getInstance()
-        .program.methods.initializeGateway()
-        .accountsStrict({
-          gatewayProgram,
-          owner: IdGatewayProgram.getInstance().admin.publicKey,
-          registryGateway: this.registry_gateway_pda,
-          systemProgram: SYSTEM_PROGRAM_ID,
-        })
-        .signers([this.wallet().payer, IdGatewayProgram.getInstance().admin])
-        .rpcAndKeys({ commitment: "confirmed" });
-      console.log(keys.signature);
-      return keys.pubkeys;
-    } catch (error) {
-      console.log(error.logs);
-    }
-  }
-  static async register(custody: PK, recovery: PK) {
+  static async registerViaGateway(
+    custodyAddress: PK,
+    recoveryAddress: PK,
+    registryProgram: PK
+  ) {
     try {
       const { idCounter } =
         await this.program().account.idRegistryGateway.fetch(
-          this.registry_gateway_pda
+          IdRegistryProgram.registry_gateway_pda
         );
       const wid = idCounter.add(new BN(1));
-      const keys = await IdGatewayProgram.getInstance()
-        .program.methods.register()
-        .accounts({
-          registryGateway: this.registry_gateway_pda,
-          custodyAccount: custody,
-          recoveryAccount: recovery,
-          payer: this.wallet().publicKey,
-          widAccount: this.wid_address(wid),
+      const instance = IdGatewayProgram.getInstance();
+      const keys = await instance.program.methods
+        .register()
+        .accountsStrict({
+          custodyAccount: custodyAddress,
+          payer: instance.wallet.publicKey,
+          recoveryAccount: recoveryAddress,
+          registryProgram,
+          widAccount: IdRegistryProgram.wid_address(wid),
+          instructionSysvar: web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+          registryGateway: IdRegistryProgram.registry_gateway_pda,
+          systemProgram: SYSTEM_PROGRAM_ID,
         })
-        .signers([this.wallet().payer])
+        .signers([instance.wallet.payer])
         .rpcAndKeys({ commitment: "confirmed" });
       console.log(keys.signature);
-      return keys.pubkeys;
+      return true;
     } catch (error) {
+      if (!error.logs) {
+        throw new Error("Unexpected error");
+      }
       console.log(error.logs);
+      return false;
     }
-  }
-  static async transfer(wcAddress: PK, custody: KP, newCustody: PK) {
-    try {
-      const keys = await IdGatewayProgram.getInstance()
-        .program.methods.transfer()
-        .accounts({
-          newCustody,
-          signer: custody.publicKey,
-          widAccount: wcAddress,
-        })
-        .signers([custody])
-        .rpcAndKeys({ commitment: "confirmed" });
-      console.log(keys.signature);
-      return keys.pubkeys;
-    } catch (error) {
-      console.log(error.logs);
-    }
-  }
-  static getAdminKeypair(): KP {
-    const adminJsonPath = path.join(__dirname, "..", "admin.json");
-    const adminJsonContent = fs.readFileSync(adminJsonPath, "utf8");
-    const adminKeypairData = JSON.parse(adminJsonContent);
-    const secretKey = Uint8Array.from(adminKeypairData);
-    return web3.Keypair.fromSecretKey(secretKey);
-  }
-  static async createAndAirdropKeypair(
-    connection: web3.Connection,
-    lamports: number = 1000000000
-  ): Promise<web3.Keypair> {
-    const keypair = new web3.Keypair();
-    const airdropSignature = await connection.requestAirdrop(
-      keypair.publicKey,
-      lamports
-    );
-    await connection.confirmTransaction(airdropSignature, "confirmed");
-    return keypair;
-  }
-  static async airdrop(
-    connection: web3.Connection,
-    address: PK,
-    lamports: number = 1000000000
-  ) {
-    const airdropSignature = await connection.requestAirdrop(address, lamports);
-    await connection.confirmTransaction(airdropSignature, "confirmed");
   }
 }
