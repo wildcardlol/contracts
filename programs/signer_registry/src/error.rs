@@ -23,4 +23,12 @@ pub enum KeyRegistryError {
     KeyValueLengthExceeded,
     #[msg("Unauthorized gateway program Id")]
     GatewayIsNotProgram,
+    #[msg("Validator is not a program")]
+    ValidatorKeyIsNotProgram,
+    #[msg("Invalid Validator program")]
+    InvalidValidatorProgram,
+    #[msg("Invalid key type")]
+    InvalidKeyType,
+    #[msg("Parent cannot set child flags to true if they themselves have it false")]
+    InvalidFlagsSetByAdmin,
 }

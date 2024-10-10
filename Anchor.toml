@@ -5,9 +5,12 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-id_gateway = "FEW1NtVZjD5u3ChatB9gCBKyvnbFibP7pn8ed81UWYqZ"
-id_registry = "CGjicJKZE9tYBxMup4nhmrzfbonb6uNcYUFx5KV8U7n5"
-signer_gateway = "BWPppCHLqGTWZa8AmD9kFNxa9qXxDu9EfgWjp7sWSsD9"
+id_gateway = "4nRiMFwTjJaR8kPNdw7y9f3vSCWGik3PVx7a1cTvi5uf"
+id_registry = "J4gHEDBT7DAQy9eExU2DHYNX55x6VqtbfCrvVAdMPLv1"
+signed_key_request_validator = "r4j2QWkASQPuh8yhsJ1bLBiM6k5shGoUWANUWG2inwS"
+signer_gateway = "CyXDSVbU99MksfgPktKfk7e3wcSy4JrDMWDTdd8k6ZKB"
+signer_registry = "GzHMQ5gBpzw5LR8pjGLQHqJWZiq7trJ5T73PYp2ESzqQ"
+storage_registry = "BbMwSGQAArCGSmk25TDBcP3jSyMK2Mu1TKZQeiNXF52x"
 
 [registry]
 url = "https://api.apr.dev"

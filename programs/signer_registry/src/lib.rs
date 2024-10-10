@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("6NAJC97kxXbgFWsiiyHCiwzLQBBv7riafbxWDCK5LENy");
+declare_id!("GzHMQ5gBpzw5LR8pjGLQHqJWZiq7trJ5T73PYp2ESzqQ");
 pub mod error;
 pub use error::*;
 pub mod state;
@@ -20,9 +20,15 @@ pub mod signer_registry {
     pub fn initialize_gateway(
         ctx: Context<InitializeGateway>,
         max_keys_per_id: u16,
-        max_flags: u8,
+        default_flags: Vec<bool>,
+        initial_validators: Vec<Pubkey>,
     ) -> Result<()> {
-        processor::initialize_gateway::handler(ctx, max_keys_per_id, max_flags)?;
+        processor::initialize_gateway::handler(
+            ctx,
+            max_keys_per_id,
+            default_flags,
+            initial_validators,
+        )?;
         Ok(())
     }
     pub fn set_gateway(ctx: Context<SetGateway>) -> Result<()> {

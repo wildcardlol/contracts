@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
-use id_registry::{program::IdRegistry, IdRegistryGateway, WidAccount};
+use id_registry::{program::IdRegistry, IdRegistryGateway};
 
-declare_id!("FEW1NtVZjD5u3ChatB9gCBKyvnbFibP7pn8ed81UWYqZ");
+declare_id!("4nRiMFwTjJaR8kPNdw7y9f3vSCWGik3PVx7a1cTvi5uf");
 
 #[program]
 pub mod id_gateway {

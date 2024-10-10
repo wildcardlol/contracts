@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 use id_registry::{program::IdRegistry, WidAccount};
-use signer_registry::{program::SignerRegistry, KeyAccount, KeyData, KeyRegistryGateway};
+use signer_registry::{program::SignerRegistry, KeyData, KeyRegistryGateway};
 
-declare_id!("BWPppCHLqGTWZa8AmD9kFNxa9qXxDu9EfgWjp7sWSsD9");
+declare_id!("CyXDSVbU99MksfgPktKfk7e3wcSy4JrDMWDTdd8k6ZKB");
 
 #[program]
 pub mod signer_gateway {

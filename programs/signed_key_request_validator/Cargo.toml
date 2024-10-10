@@ -1,12 +1,12 @@
 [package]
-name = "signer_registry"
+name = "signed_key_request_validator"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "signer_registry"
+name = "signed_key_request_validator"
 
 [features]
 default = []
@@ -18,8 +18,5 @@ idl-build = ["anchor-lang/idl-build"]
 
 [dependencies]
 anchor-lang = { workspace = true }
-id_registry = { path = "../id_registry", features = ["cpi"] }
 common = { path = "../../common" }
-signed_key_request_validator = { path = "../signed_key_request_validator", features = [
-    "cpi",
-] }
+ed25519-dalek = "1.0.1"
